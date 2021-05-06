@@ -13,7 +13,12 @@ class Login extends StatelessWidget {
         title: Text("Login"),
       ),
       body: ChangeNotifierProvider(
-        create: (_) => LoginProvider(),
+        create: (_) => LoginProvider(
+          postUrl: "https://trial.nivid.app/tokenuser_token",
+          loginEmailOrNumber: 'number',
+          passwordOrPin: 'pin',
+          nextpage: Text("Hello"),
+        ),
         child: Column(
           children: [
             emailFormField(),
@@ -22,7 +27,7 @@ class Login extends StatelessWidget {
             verticalGap(),
             Consumer<LoginProvider>(
               builder: (context, loginProvider, child) =>
-                  Text(loginProvider.getEmailError ?? loginProvider.getEmail),
+                  Text(loginProvider.getIdError ?? ""),
             ),
             verticalGap(),
             Consumer<LoginProvider>(
@@ -76,12 +81,14 @@ class Login extends StatelessWidget {
   submitBtn() {
     return Consumer<LoginProvider>(
       builder: (context, loginProvider, child) => ElevatedButton(
-        onPressed: loginProvider.sendPostRequest,
-        child: Text(loginProvider.getLoginStatus == 'not_logged'
+        onPressed: () {
+          loginProvider.sendPostRequest(context);
+        },
+        child: Text(loginProvider.getLoginStatus.getLoginStat == 'not_logged'
             ? "Submit"
             : loginProvider.getLoginStatus),
         style: ButtonStyle(
-          backgroundColor: loginProvider.btnColor,
+          backgroundColor: MaterialStateProperty.all(loginProvider.btnColor),
         ),
       ),
     );

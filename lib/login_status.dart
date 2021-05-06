@@ -14,24 +14,24 @@ class LoginStatus {
     switch (loginStatus) {
       case "not_logged":
         {
-          _buttonColor = MaterialStateProperty.all(Colors.blue);
+          _buttonColor = Colors.blue;
         }
         break;
 
       case "logging":
         {
-          _buttonColor = MaterialStateProperty.all(Colors.purple);
+          _buttonColor = Colors.purple;
         }
         break;
       case "logged":
         {
-          _buttonColor = MaterialStateProperty.all(Colors.green);
+          _buttonColor = Colors.green;
         }
         break;
 
       case "failed":
         {
-          _buttonColor = MaterialStateProperty.all(Colors.red[400]);
+          _buttonColor = Colors.red[40];
         }
         break;
 

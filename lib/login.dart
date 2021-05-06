@@ -1,69 +1,98 @@
 import 'dart:async';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-// import 'package:login/api_services/api_service.dart';
-
+import 'package:login/shared_preferances/shared_pref.dart';
 import './login_status.dart';
 import './login_validator.dart';
+
 // import './api_services/api_service.dart';
-import './shared_preferances/shared_pref.dart';
 
 class LoginProvider extends ChangeNotifier with Validator {
-  String _email;
-  String _password;
-  String _emailError = "**reqd**";
-  String _passwordError = "**reqd**";
-  LoginStatus _loginStatus = new LoginStatus("not_logged");
+  String _loginEmailOrNumber;
+  String _postUrl;
+  String _passwordOrPin;
+  Widget _nextpage;
 
-  String get getEmail => _email;
+  LoginProvider({
+    @required String postUrl,
+    @required String loginEmailOrNumber,
+    @required String passwordOrPin,
+    @required Widget nextpage,
+  }) {
+    _postUrl = postUrl;
+    _loginEmailOrNumber = loginEmailOrNumber;
+    _passwordOrPin = passwordOrPin;
+    _nextpage = nextpage;
+  }
+
+  String _loginId;
+  String _password;
+  String _loginIdError;
+  String _passwordError;
+  LoginStatus _loginStatus = new LoginStatus("not_logged");
+  String get getLoginId => _loginId;
   String get getPassword => _password;
   get btnColor => _loginStatus.getButtonColor;
-  String get getLoginStatus => _loginStatus.getLoginStat;
-
-  get getEmailError => _emailError;
+  LoginStatus get getLoginStatus => _loginStatus;
+  get getIdError => _loginIdError;
   get getPasswordError => _passwordError;
-
   // email setter
-  void changeEmail(email) {
-    _email = email;
-    _emailError = validateEmail(email) ? email : "Invalid Email";
+  void changeEmail(id) {
+    _loginId = id;
+    if (_loginEmailOrNumber == "email") {
+      _loginIdError = validateEmail(id) ? "" : "Invalid $_loginEmailOrNumber";
+    } else if (_loginEmailOrNumber == "number") {
+      _loginIdError = validatePhone(id) ? "" : "Invalid $_loginEmailOrNumber";
+    }
     notifyListeners();
   }
+
+  get validated => _loginIdError == "" && _passwordError == "";
 
   // password setter
   void changePassword(password) {
     _password = password;
-    _passwordError =
-        validatePassword(password) ? "Good to go!!!" : "Password Error";
+    if (_passwordOrPin == "pin") {
+      _passwordError = validatePin(password, 4) ? "" : "Pin Error";
+    } else if (_passwordOrPin == "password") {
+      _passwordError = validatePassword(password) ? "" : "Password Error";
+    }
     notifyListeners();
   }
 
   // on submit button
-  void sendPostRequest() async {
+  void sendPostRequest(context) async {
     // change login stat to logging and notify listener
     await _loginStatus.setLoginStat("logging");
     notifyListeners();
-    var _url = "https://trial.nivid.app/tokenuser_token";
     var _data = {
-      "auth": {"email": _email, "password": _password}
+      "auth": {"email": _loginId, "password": _password}
     };
     Dio _dio = new Dio();
     try {
-      var response = await _dio.post(_url, data: _data);
+      var response = await _dio.post(_postUrl, data: _data);
       await Future.delayed(Duration(seconds: 1));
-
       if (response.data["jwt"] != null || response.data["jwt"] != "") {
         //change login stat to logged and save to shared preferances
         _loginStatus.setLoginStat("logged");
-        addUserToSP(_email, _data);
+        Future.delayed(Duration(seconds: 1));
+        notifyListeners();
+        addUserToSP(_loginId, _data);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => _nextpage),
+        );
       } else {
         //if no jwt throw error to catch block
         throw ("No jwt!!!");
       }
     } catch (e) {
-      _loginStatus.setLoginStat("failed");
+      await _loginStatus.setLoginStat("failed");
+      notifyListeners();
+
+      await Future.delayed(Duration(seconds: 1));
+      _loginStatus.setLoginStat("not_logged");
     } finally {
       notifyListeners();
     }
