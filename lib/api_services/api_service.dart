@@ -3,9 +3,12 @@ import 'package:dio/dio.dart';
 class ApiRequests {
   final Dio _dio = new Dio();
 
-  getRequest(String url) async {
+  getRequest(String url, String jwtAuth) async {
     try {
-      var response = await _dio.get(url);
+      var response = await _dio.get(
+        url,
+        queryParameters: {'jwt': jwtAuth},
+      );
       return response;
     } on DioError catch (e) {
       return {
